@@ -31,10 +31,8 @@ public class TransactionSummary {
     BigDecimal revenue = value.getItemPrice().multiply(value.getItemQuantity());
     totalRevenue = totalRevenue.add(revenue);
     customers.add(value.getCustomerId());
-    Optional.ofNullable(itemQuantities.put(value.getItemId(), value.getItemQuantity()))
-        .ifPresent(p -> itemQuantities.put(value.getItemId(), p.add(value.getItemQuantity())));
-    Optional.ofNullable(revenueByDate.put(value.getTransactionDate(), revenue))
-        .ifPresent(p -> itemQuantities.put(value.getItemId(), p.add(revenue)));
+    updateItemQuantities(value.getItemId(), value.getItemQuantity());
+    updateRevenueByDate(value.getTransactionDate(), revenue);
   }
 
   /**
@@ -46,13 +44,17 @@ public class TransactionSummary {
   public TransactionSummary combine(TransactionSummary other) {
     totalRevenue = totalRevenue.add(other.totalRevenue);
     customers.addAll(other.customers);
-    other.itemQuantities.forEach((item, quantity) -> Optional
-        .ofNullable(itemQuantities.put(item, quantity))
-        .ifPresent(previous -> itemQuantities.put(item, previous.add(quantity))));
-    other.revenueByDate.forEach((item, quantity) -> Optional
-        .ofNullable(revenueByDate.put(item, quantity))
-        .ifPresent(previous -> revenueByDate.put(item, previous.add(quantity))));
+    other.itemQuantities.forEach(this::updateItemQuantities);
+    other.revenueByDate.forEach(this::updateRevenueByDate);
     return this;
+  }
+
+  private void updateItemQuantities(String itemId, BigDecimal itemQuantity) {
+    itemQuantities.merge(itemId, itemQuantity, BigDecimal::add);
+  }
+
+  private void updateRevenueByDate(Date date, BigDecimal revenue) {
+    revenueByDate.merge(date, revenue, BigDecimal::add);
   }
 
   public BigDecimal totalRevenue() {

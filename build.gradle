@@ -1,6 +1,7 @@
 plugins {
   id 'java'
   id 'jacoco'
+  id 'info.solidsoft.pitest' version '1.9.0'
 }
 
 jar {
@@ -27,6 +28,7 @@ dependencies {
   testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.2'
   testImplementation 'org.hamcrest:hamcrest:2.2'
   testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.2'
+  pitest 'org.pitest:pitest-junit5-plugin:1.1.1'
 }
 
 test {
@@ -36,4 +38,13 @@ test {
 
 jacoco {
   toolVersion = "0.8.8"
+}
+
+pitest {
+  targetClasses = ['com.tikrai.gmail.sales.*']  //by default "${project.group}.*"
+  threads = 4
+  outputFormats = ['XML', 'HTML']
+  timestampedReports = false
+  junit5PluginVersion = '1.1.1'
+  pitestVersion = '1.9.0'
 }

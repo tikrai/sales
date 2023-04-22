@@ -50,6 +50,28 @@ class TransactionSummaryTest {
   }
 
   @Test
+  void acceptFirstTransactionTwiceAndSecond() {
+    transactionSummary.accept(tx1);
+    transactionSummary.accept(tx1);
+    transactionSummary.accept(tx2);
+    assertThat(transactionSummary.totalRevenue(), equalTo(BigDecimal.valueOf(55)));
+    assertThat(transactionSummary.uniqueCustomersCount(), equalTo(2));
+    assertThat(transactionSummary.mostPopularItem(), equalTo(tx1.getItemId()));
+    assertThat(transactionSummary.bestDate(), equalTo(tx1.getTransactionDateString()));
+  }
+
+  @Test
+  void acceptSecondTransactionTwiceAndFirst() {
+    transactionSummary.accept(tx2);
+    transactionSummary.accept(tx2);
+    transactionSummary.accept(tx1);
+    assertThat(transactionSummary.totalRevenue(), equalTo(BigDecimal.valueOf(50)));
+    assertThat(transactionSummary.uniqueCustomersCount(), equalTo(2));
+    assertThat(transactionSummary.mostPopularItem(), equalTo(tx2.getItemId()));
+    assertThat(transactionSummary.bestDate(), equalTo(tx2.getTransactionDateString()));
+  }
+
+  @Test
   void combineEmptySummaryWithOther() {
     TransactionSummary otherSummary = new TransactionSummary();
     otherSummary.accept(tx2);
