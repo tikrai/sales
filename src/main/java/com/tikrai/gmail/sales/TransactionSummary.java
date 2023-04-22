@@ -2,11 +2,11 @@ package com.tikrai.gmail.sales;
 
 import com.tikrai.gmail.sales.model.Transaction;
 import java.math.BigDecimal;
-import lombok.Getter;
+import java.util.HashSet;
 
-@Getter
 public class TransactionSummary {
   private BigDecimal totalRevenue = BigDecimal.ZERO;
+  private final HashSet<String> customers = new HashSet<>();
 
   /**
    * Adds a new value into the summary
@@ -15,6 +15,7 @@ public class TransactionSummary {
    */
   public void accept(Transaction value) {
     totalRevenue = totalRevenue.add(value.getItemPrice().multiply(value.getItemQuantity()));
+    customers.add(value.getCustomerId());
   }
 
   /**
@@ -25,6 +26,15 @@ public class TransactionSummary {
    */
   public void combine(TransactionSummary other) {
     totalRevenue = totalRevenue.add(other.totalRevenue);
+    customers.addAll(other.customers);
+  }
+
+  public BigDecimal totalRevenue() {
+    return totalRevenue;
+  }
+
+  public int uniqueCustomersCount() {
+    return customers.size();
   }
 
   @Override
@@ -34,6 +44,6 @@ public class TransactionSummary {
         ● Unique Customers: %s
         ● Most Popular Item: %s
         ● Date with Highest Revenue: %s"""
-        .formatted(totalRevenue, "not calculated", "not calculated", "not calculated");
+        .formatted(totalRevenue, uniqueCustomersCount(), "not calculated", "not calculated");
   }
 }
