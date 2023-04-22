@@ -2,6 +2,7 @@ package com.tikrai.gmail.sales;
 
 import com.tikrai.gmail.sales.model.Transaction;
 import java.math.BigDecimal;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -12,6 +13,7 @@ public class TransactionSummary {
   private BigDecimal totalRevenue = BigDecimal.ZERO;
   private final HashSet<String> customers = new HashSet<>();
   private final Map<String, BigDecimal> itemQuantities = new HashMap<>();
+  private final Map<Date, BigDecimal> revenueByDate = new HashMap<>();
 
   /**
    * Adds a new value into the summary
@@ -19,10 +21,13 @@ public class TransactionSummary {
    * @param value the input value
    */
   public void accept(Transaction value) {
-    totalRevenue = totalRevenue.add(value.getItemPrice().multiply(value.getItemQuantity()));
+    BigDecimal revenue = value.getItemPrice().multiply(value.getItemQuantity());
+    totalRevenue = totalRevenue.add(revenue);
     customers.add(value.getCustomerId());
     Optional.ofNullable(itemQuantities.put(value.getItemId(), value.getItemQuantity()))
         .ifPresent(p -> itemQuantities.put(value.getItemId(), p.add(value.getItemQuantity())));
+    Optional.ofNullable(revenueByDate.put(value.getTransactionDate(), revenue))
+        .ifPresent(p -> itemQuantities.put(value.getItemId(), p.add(revenue)));
   }
 
   /**
@@ -37,6 +42,9 @@ public class TransactionSummary {
     other.itemQuantities.forEach((item, quantity) -> Optional
         .ofNullable(itemQuantities.put(item, quantity))
         .ifPresent(previous -> itemQuantities.put(item, previous.add(quantity))));
+    other.revenueByDate.forEach((item, quantity) -> Optional
+        .ofNullable(revenueByDate.put(item, quantity))
+        .ifPresent(previous -> revenueByDate.put(item, previous.add(quantity))));
   }
 
   public BigDecimal totalRevenue() {
@@ -54,6 +62,14 @@ public class TransactionSummary {
         .getKey();
   }
 
+  public String bestDate() {
+    Date bestDate = revenueByDate.entrySet().stream()
+        .max(Entry.comparingByValue())
+        .orElseThrow()
+        .getKey();
+    return Transaction.DATE_FORMAT.format(bestDate);
+  }
+
   @Override
   public String toString() {
     return """
@@ -61,6 +77,6 @@ public class TransactionSummary {
         ● Unique Customers: %s
         ● Most Popular Item: %s
         ● Date with Highest Revenue: %s"""
-        .formatted(totalRevenue, uniqueCustomersCount(), mostPopularItem(), "not calculated");
+        .formatted(totalRevenue, uniqueCustomersCount(), mostPopularItem(), bestDate());
   }
 }
