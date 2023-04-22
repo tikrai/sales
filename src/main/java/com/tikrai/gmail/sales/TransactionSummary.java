@@ -2,11 +2,16 @@ package com.tikrai.gmail.sales;
 
 import com.tikrai.gmail.sales.model.Transaction;
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
 
 public class TransactionSummary {
   private BigDecimal totalRevenue = BigDecimal.ZERO;
   private final HashSet<String> customers = new HashSet<>();
+  private final Map<String, BigDecimal> itemQuantities = new HashMap<>();
 
   /**
    * Adds a new value into the summary
@@ -16,6 +21,8 @@ public class TransactionSummary {
   public void accept(Transaction value) {
     totalRevenue = totalRevenue.add(value.getItemPrice().multiply(value.getItemQuantity()));
     customers.add(value.getCustomerId());
+    Optional.ofNullable(itemQuantities.put(value.getItemId(), value.getItemQuantity()))
+        .ifPresent(p -> itemQuantities.put(value.getItemId(), p.add(value.getItemQuantity())));
   }
 
   /**
@@ -27,6 +34,9 @@ public class TransactionSummary {
   public void combine(TransactionSummary other) {
     totalRevenue = totalRevenue.add(other.totalRevenue);
     customers.addAll(other.customers);
+    other.itemQuantities.forEach((item, quantity) -> Optional
+        .ofNullable(itemQuantities.put(item, quantity))
+        .ifPresent(previous -> itemQuantities.put(item, previous.add(quantity))));
   }
 
   public BigDecimal totalRevenue() {
@@ -37,6 +47,13 @@ public class TransactionSummary {
     return customers.size();
   }
 
+  public String mostPopularItem() {
+    return itemQuantities.entrySet().stream()
+        .max(Entry.comparingByValue())
+        .orElseThrow()
+        .getKey();
+  }
+
   @Override
   public String toString() {
     return """
@@ -44,6 +61,6 @@ public class TransactionSummary {
         ● Unique Customers: %s
         ● Most Popular Item: %s
         ● Date with Highest Revenue: %s"""
-        .formatted(totalRevenue, uniqueCustomersCount(), "not calculated", "not calculated");
+        .formatted(totalRevenue, uniqueCustomersCount(), mostPopularItem(), "not calculated");
   }
 }
