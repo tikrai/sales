@@ -1,0 +1,2 @@
+transaction_id,customer_id,item_id,transaction_date,item_price,item_quantity
+1001,cust-001,product-001,2022-01-01,12.50,3
