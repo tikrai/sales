@@ -2,7 +2,6 @@ package com.tikrai.gmail.sales;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.opencsv.bean.CsvToBeanBuilder;
 import com.tikrai.gmail.sales.model.Transaction;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -19,11 +18,10 @@ public class TransactionFileReader {
     try (
         InputStream stream = getInputStream(fileName);
         InputStreamReader inputReader = new InputStreamReader(stream, UTF_8);
-        BufferedReader reader = new BufferedReader(inputReader)
+        BufferedReader bufferedReader = new BufferedReader(inputReader);
+        TransactionCsvReader csvReader = new TransactionCsvReader(bufferedReader)
     ) {
-      return new CsvToBeanBuilder<Transaction>(reader)
-          .withType(Transaction.class)
-          .build().parse();
+      return csvReader.readTransactions();
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
