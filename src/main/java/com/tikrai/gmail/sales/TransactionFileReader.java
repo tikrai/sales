@@ -1,5 +1,7 @@
 package com.tikrai.gmail.sales;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.opencsv.bean.CsvToBeanBuilder;
 import com.tikrai.gmail.sales.model.Transaction;
 import java.io.BufferedReader;
@@ -8,16 +10,15 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 
 public class TransactionFileReader {
 
-  public List<Transaction> read(String fileName) {
+  public static List<Transaction> read(String fileName) {
     try (
         InputStream stream = getInputStream(fileName);
-        InputStreamReader inputReader = new InputStreamReader(stream, StandardCharsets.UTF_8);
+        InputStreamReader inputReader = new InputStreamReader(stream, UTF_8);
         BufferedReader reader = new BufferedReader(inputReader)
     ) {
       return new CsvToBeanBuilder<Transaction>(reader)
@@ -28,7 +29,7 @@ public class TransactionFileReader {
     }
   }
 
-  private InputStream getInputStream(String fileName) {
+  private static InputStream getInputStream(String fileName) {
     try {
       return new FileInputStream(fileName);
     } catch (FileNotFoundException e) {

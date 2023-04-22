@@ -2,12 +2,19 @@ package com.tikrai.gmail.sales;
 
 import com.tikrai.gmail.sales.model.Transaction;
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.BinaryOperator;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Collector;
 
 public class TransactionSummary {
   private BigDecimal totalRevenue = BigDecimal.ZERO;
@@ -36,7 +43,7 @@ public class TransactionSummary {
    * @param other another {@code TransactionSummary}
    * @throws NullPointerException if {@code other} is null
    */
-  public void combine(TransactionSummary other) {
+  public TransactionSummary combine(TransactionSummary other) {
     totalRevenue = totalRevenue.add(other.totalRevenue);
     customers.addAll(other.customers);
     other.itemQuantities.forEach((item, quantity) -> Optional
@@ -45,6 +52,7 @@ public class TransactionSummary {
     other.revenueByDate.forEach((item, quantity) -> Optional
         .ofNullable(revenueByDate.put(item, quantity))
         .ifPresent(previous -> revenueByDate.put(item, previous.add(quantity))));
+    return this;
   }
 
   public BigDecimal totalRevenue() {
@@ -78,5 +86,34 @@ public class TransactionSummary {
         ● Most Popular Item: %s
         ● Date with Highest Revenue: %s"""
         .formatted(totalRevenue, uniqueCustomersCount(), mostPopularItem(), bestDate());
+  }
+
+  public static Collector<Transaction, TransactionSummary, TransactionSummary> toSummary() {
+    return new Collector<>() {
+      @Override
+      public Supplier<TransactionSummary> supplier() {
+        return TransactionSummary::new;
+      }
+
+      @Override
+      public BiConsumer<TransactionSummary, Transaction> accumulator() {
+        return TransactionSummary::accept;
+      }
+
+      @Override
+      public BinaryOperator<TransactionSummary> combiner() {
+        return TransactionSummary::combine;
+      }
+
+      @Override
+      public Function<TransactionSummary, TransactionSummary> finisher() {
+        return x -> x;
+      }
+
+      @Override
+      public Set<Characteristics> characteristics() {
+        return Collections.emptySet();
+      }
+    };
   }
 }

@@ -1,11 +1,11 @@
 package com.tikrai.gmail.sales;
 
+import static com.tikrai.gmail.sales.TransactionSummary.toSummary;
+
 public class Sales {
 
   public static void main(String... args) {
     String fileName = args.length > 0 ? args[0] : "/input.csv";
-    TransactionSummary summary = new TransactionFileReader().read(fileName).stream()
-        .collect(TransactionSummary::new, TransactionSummary::accept, TransactionSummary::combine);
-    System.out.println(summary);
+    System.out.println(TransactionFileReader.read(fileName).stream().collect(toSummary()));
   }
 }
